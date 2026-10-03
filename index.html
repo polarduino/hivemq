@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Odczyt danych MQTT</title>
+  <!-- 1. Biblioteka MQTT.js -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  
+  <!-- 2. Najpierw konfiguracja (zmienna MQTT_CONFIG) -->
+  <script src="config.js"></script>
+  
+  <!-- 3. Na końcu logika aplikacji (używa MQTT_CONFIG) -->
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <h1>Temperatura: <span id="val">--</span> °C</h1>
+  <p>Stan: <span id="status">Łączenie...</span></p>
+</body>
+</html>
