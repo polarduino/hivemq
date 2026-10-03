@@ -3,6 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <title>Odczyt danych MQTT</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; max-width: 320px; }
+    .status { font-weight: bold; }
+    .time { font-size: 0.9em; color: #555; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Wartość z czujnika</h2>
+    <p>Odczyt: <strong id="val">--</strong></p>
+    <p class="time">Ostatnia zmiana: <span id="last-time">brak</span></p>
+    <p>Status: <span id="status" class="status">Łączenie...</span></p>
+  </div>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Odczyt danych MQTT</title>
   <!-- 1. Biblioteka MQTT.js -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   
