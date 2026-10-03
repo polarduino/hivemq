@@ -1,6 +1,6 @@
 const MQTT_CONFIG = {
-  host: 'wss://TWOJ_ID_KLASTERA.hivemq.cloud:8884/mqtt',
+  host: 'f50fa4c1718848729a737db6ffb1a05d.s1.eu.hivemq.cloud:8884/mqtt',
   username: 'frontend_guest',
-  password: 'haslo_read_only',
-  topic: 'czujniki/temperatura'
+  password: '1234QR4321',
+  topic: 'test/data'
 };
