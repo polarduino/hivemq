@@ -2,16 +2,16 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Panel 10 Czujników MQTT</title>
+  <title>Panel Czujników MQTT</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <script src="config.js"></script>
   <script src="app.js" defer></script>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 20px;
+      font-family: Arial, sans-serif;
       background-color: #f3f4f6;
       margin: 0;
+      padding: 20px;
     }
     .header-bar {
       display: flex;
@@ -24,54 +24,58 @@
       padding: 6px 12px;
       border-radius: 4px;
       background: #e5e7eb;
+      color: #374151;
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 15px;
     }
     .card {
-      background: white;
+      background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
     .card h3 {
       margin: 0 0 10px 0;
       font-size: 0.95rem;
       color: #4b5563;
     }
-    .card .val {
-      font-size: 1.6rem;
+    .val-box {
+      font-size: 1.8rem;
       font-weight: bold;
       color: #111827;
     }
     .time-info {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: #6b7280;
-      margin-top: 15px;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
   <div class="header-bar">
-    <h2>Pomiary z urządzenia</h2>
+    <h2>Panel Odczytów</h2>
     <div>Status: <span id="status" class="status">Łączenie...</span></div>
   </div>
 
   <div class="grid">
-    <div class="card"><h3>Czujnik 1</h3><div class="val" id="s1">--</div></div>
-    <div class="card"><h3>Czujnik 2</h3><div class="val" id="s2">--</div></div>
-    <div class="card"><h3>Czujnik 3</h3><div class="val" id="s3">--</div></div>
-    <div class="card"><h3>Czujnik 4</h3><div class="val" id="s4">--</div></div>
-    <div class="card"><h3>Czujnik 5</h3><div class="val" id="s5">--</div></div>
-    <div class="card"><h3>Czujnik 6</h3><div class="val" id="s6">--</div></div>
-    <div class="card"><h3>Czujnik 7</h3><div class="val" id="s7">--</div></div>
-    <div class="card"><h3>Czujnik 8</h3><div class="val" id="s8">--</div></div>
-    <div class="card"><h3>Czujnik 9</h3><div class="val" id="s9">--</div></div>
-    <div class="card"><h3>Czujnik 10</h3><div class="val" id="s10">--</div></div>
+    <div class="card"><h3>Czujnik 1</h3><div class="val-box" id="s1">--</div></div>
+    <div class="card"><h3>Czujnik 2</h3><div class="val-box" id="s2">--</div></div>
+    <div class="card"><h3>Czujnik 3</h3><div class="val-box" id="s3">--</div></div>
+    <div class="card"><h3>Czujnik 4</h3><div class="val-box" id="s4">--</div></div>
+    <div class="card"><h3>Czujnik 5</h3><div class="val-box" id="s5">--</div></div>
+    <div class="card"><h3>Czujnik 6</h3><div class="val-box" id="s6">--</div></div>
+    <div class="card"><h3>Czujnik 7</h3><div class="val-box" id="s7">--</div></div>
+    <div class="card"><h3>Czujnik 8</h3><div class="val-box" id="s8">--</div></div>
+    <div class="card"><h3>Czujnik 9</h3><div class="val-box" id="s9">--</div></div>
+    <div class="card"><h3>Czujnik 10</h3><div class="val-box" id="s10">--</div></div>
   </div>
 
   <p class="time-info">Ostatnia odebrana paczka: <span id="last-time">brak</span></p>
