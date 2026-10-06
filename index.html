@@ -2,88 +2,182 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Czujników MQTT</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="config.js?v=1.3"></script>
-  <script src="app.js?v=1.3" defer></script>
+  <script src="config.js?v=1.4"></script>
+  <script src="app.js?v=1.4" defer></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f3f4f6;
-      margin: 0;
-      padding: 20px;
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --primary: #38bdf8;
+      --accent: #2563eb;
     }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
     .header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      gap: 16px;
     }
-    .status {
-      font-weight: bold;
-      padding: 6px 12px;
-      border-radius: 4px;
-      background: #e5e7eb;
-      color: #374151;
+
+    .header-bar h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      background: linear-gradient(90deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #64748b;
+      box-shadow: 0 0 6px currentColor;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 16px;
     }
+
     .card {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      min-height: 110px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #374151;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Efekt mignięcia po odebraniu nowej paczki */
+    .card.flash {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+
     .card h3 {
-      margin: 0 0 10px 0;
-      font-size: 0.95rem;
-      color: #4b5563;
-    }
-    .val-box {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: #111827;
-    }
-    .time-info {
+      margin: 0;
       font-size: 0.85rem;
-      color: #6b7280;
-      margin-top: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .val-box {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #ffffff;
+      margin: 12px 0 4px 0;
+    }
+
+    .meta-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .time-info span {
+      color: var(--text-main);
+      font-family: ui-monospace, monospace;
+    }
+
+    footer {
+      font-size: 0.8rem;
+      color: #64748b;
     }
   </style>
 </head>
 <body>
 
-  <div class="header-bar">
-    <h2>Panel Odczytów</h2>
-    <div>Status: <span id="status" class="status">Łączenie...</span></div>
+  <div class="container">
+    <div class="header-bar">
+      <h2>Panel Odczytów</h2>
+      <div class="status-badge">
+        <span id="status-dot" class="dot"></span>
+        <span id="status">Łączenie...</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="card-s1"><h3>Czujnik 1</h3><div class="val-box" id="s1">--</div></div>
+      <div class="card" id="card-s2"><h3>Czujnik 2</h3><div class="val-box" id="s2">--</div></div>
+      <div class="card" id="card-s3"><h3>Czujnik 3</h3><div class="val-box" id="s3">--</div></div>
+      <div class="card" id="card-s4"><h3>Czujnik 4</h3><div class="val-box" id="s4">--</div></div>
+      <div class="card" id="card-s5"><h3>Czujnik 5</h3><div class="val-box" id="s5">--</div></div>
+      <div class="card" id="card-s6"><h3>Czujnik 6</h3><div class="val-box" id="s6">--</div></div>
+      <div class="card" id="card-s7"><h3>Czujnik 7</h3><div class="val-box" id="s7">--</div></div>
+      <div class="card" id="card-s8"><h3>Czujnik 8</h3><div class="val-box" id="s8">--</div></div>
+      <div class="card" id="card-s9"><h3>Czujnik 9</h3><div class="val-box" id="s9">--</div></div>
+      <div class="card" id="card-s10"><h3>Czujnik 10</h3><div class="val-box" id="s10">--</div></div>
+    </div>
+
+    <div class="meta-box">
+      <div class="time-info">Ostatnia odebrana paczka: <span id="last-time">brak</span></div>
+      <footer>Wersja: <span id="app-version">--</span></footer>
+    </div>
   </div>
-
-  <div class="grid">
-    <div class="card"><h3>Czujnik 1</h3><div class="val-box" id="s1">--</div></div>
-    <div class="card"><h3>Czujnik 2</h3><div class="val-box" id="s2">--</div></div>
-    <div class="card"><h3>Czujnik 3</h3><div class="val-box" id="s3">--</div></div>
-    <div class="card"><h3>Czujnik 4</h3><div class="val-box" id="s4">--</div></div>
-    <div class="card"><h3>Czujnik 5</h3><div class="val-box" id="s5">--</div></div>
-    <div class="card"><h3>Czujnik 6</h3><div class="val-box" id="s6">--</div></div>
-    <div class="card"><h3>Czujnik 7</h3><div class="val-box" id="s7">--</div></div>
-    <div class="card"><h3>Czujnik 8</h3><div class="val-box" id="s8">--</div></div>
-    <div class="card"><h3>Czujnik 9</h3><div class="val-box" id="s9">--</div></div>
-    <div class="card"><h3>Czujnik 10</h3><div class="val-box" id="s10">--</div></div>
-  </div>
-
-  <p class="time-info">Ostatnia odebrana paczka: <span id="last-time">brak</span></p>
-
-  <!-- Nowa stopka z wersją -->
-  <footer style="margin-top: 30px; font-size: 0.8rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px;">
-    Wersja aplikacji: <span id="app-version">--</span>
-  </footer>
 
 </body>
 </html>
