@@ -1,4 +1,4 @@
-const WATCHDOG_TIMEOUT_MS = 10000;
+const WATCHDOG_TIMEOUT_MS = 60000; // zmiana z 10000
 let watchdogTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
