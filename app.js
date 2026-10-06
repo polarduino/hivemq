@@ -1,9 +1,16 @@
+const APP_VERSION = '1.1'; // Zmień numer tutaj przy kolejnej aktualizacji
 const WATCHDOG_TIMEOUT_MS = 60000; // zmiana z 10000
 let watchdogTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   const statusElem = document.getElementById('status');
   const timeElem = document.getElementById('last-time');
+  const versionElem = document.getElementById('app-version');
+
+  // Wyświetlenie wersji w stopce
+  if (versionElem) {
+    versionElem.innerText = 'v' + APP_VERSION;
+  }
 
   const options = {
     clientId: 'web_' + Math.random().toString(16).substring(2, 8),
