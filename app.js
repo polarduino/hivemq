@@ -1,4 +1,4 @@
-const APP_VERSION = '1.1'; // Zmień numer tutaj przy kolejnej aktualizacji
+const APP_VERSION = '1.3'; // Zmień numer tutaj przy kolejnej aktualizacji
 const WATCHDOG_TIMEOUT_MS = 60000; // zmiana z 10000
 let watchdogTimer = null;
 
