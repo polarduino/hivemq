@@ -1,15 +1,23 @@
-const APP_VERSION = '1.3'; // Zmień numer tutaj przy kolejnej aktualizacji
-const WATCHDOG_TIMEOUT_MS = 60000; // zmiana z 10000
+const APP_VERSION = '1.4';
+const WATCHDOG_TIMEOUT_MS = 60000;
 let watchdogTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   const statusElem = document.getElementById('status');
+  const dotElem = document.getElementById('status-dot');
   const timeElem = document.getElementById('last-time');
   const versionElem = document.getElementById('app-version');
 
-  // Wyświetlenie wersji w stopce
   if (versionElem) {
     versionElem.innerText = 'v' + APP_VERSION;
+  }
+
+  function setStatus(text, color) {
+    if (statusElem) statusElem.innerText = text;
+    if (dotElem) {
+      dotElem.style.backgroundColor = color;
+      dotElem.style.color = color;
+    }
   }
 
   const options = {
@@ -25,38 +33,36 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetWatchdog() {
     if (watchdogTimer) clearTimeout(watchdogTimer);
     watchdogTimer = setTimeout(() => {
-      if (statusElem) {
-        statusElem.innerText = 'Brak danych z urządzenia';
-        statusElem.style.color = 'orange';
-      }
+      setStatus('Brak danych (timeout)', '#f59e0b'); // pomarańczowy
     }, WATCHDOG_TIMEOUT_MS);
   }
 
   client.on('connect', () => {
-    if (statusElem) {
-      statusElem.innerText = 'Połączono (Oczekiwanie)';
-      statusElem.style.color = 'green';
-    }
+    setStatus('Połączono (Oczekiwanie)', '#38bdf8'); // błękitny
     client.subscribe(MQTT_CONFIG.topic);
   });
 
   client.on('reconnect', () => {
-    if (statusElem) {
-      statusElem.innerText = 'Ponawianie połączenia...';
-      statusElem.style.color = 'orange';
-    }
+    setStatus('Ponawianie połączenia...', '#f59e0b');
   });
 
   client.on('message', (topic, message) => {
     try {
       const data = JSON.parse(message.toString());
 
-      // Aktualizacja wartości pól s1..s10
+      // Aktualizacja wartości s1..s10 z efektem podświetlenia
       for (let i = 1; i <= 10; i++) {
         const key = 's' + i;
-        const elem = document.getElementById(key);
-        if (elem && data[key] !== undefined) {
-          elem.innerText = data[key];
+        const valElem = document.getElementById(key);
+        const cardElem = document.getElementById('card-' + key);
+
+        if (valElem && data[key] !== undefined) {
+          valElem.innerText = data[key];
+          
+          if (cardElem) {
+            cardElem.classList.add('flash');
+            setTimeout(() => cardElem.classList.remove('flash'), 300);
+          }
         }
       }
 
@@ -64,11 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timeElem.innerText = new Date().toLocaleTimeString('pl-PL');
       }
 
-      if (statusElem) {
-        statusElem.innerText = 'Aktywne (Dane na żywo)';
-        statusElem.style.color = 'green';
-      }
-
+      setStatus('Aktywne (Dane na żywo)', '#10b981'); // zielony
       resetWatchdog();
     } catch (err) {
       console.warn('Otrzymano nieprawidłowy format JSON:', message.toString());
@@ -76,16 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   client.on('error', (err) => {
-    if (statusElem) {
-      statusElem.innerText = 'Błąd połączenia';
-      statusElem.style.color = 'red';
-    }
+    setStatus('Błąd połączenia', '#ef4444'); // czerwony
   });
 
   client.on('close', () => {
-    if (statusElem) {
-      statusElem.innerText = 'Rozłączono';
-      statusElem.style.color = 'gray';
-    }
+    setStatus('Rozłączono', '#64748b'); // szary
   });
 });
