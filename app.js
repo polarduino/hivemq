@@ -18,23 +18,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetWatchdog() {
     if (watchdogTimer) clearTimeout(watchdogTimer);
     watchdogTimer = setTimeout(() => {
-      statusElem.innerText = 'Brak danych z urządzenia';
-      statusElem.style.color = 'orange';
+      if (statusElem) {
+        statusElem.innerText = 'Brak danych z urządzenia';
+        statusElem.style.color = 'orange';
+      }
     }, WATCHDOG_TIMEOUT_MS);
   }
 
   client.on('connect', () => {
-    statusElem.innerText = 'Połączono (Oczekiwanie)';
-    statusElem.style.color = 'green';
+    if (statusElem) {
+      statusElem.innerText = 'Połączono (Oczekiwanie)';
+      statusElem.style.color = 'green';
+    }
     client.subscribe(MQTT_CONFIG.topic);
+  });
+
+  client.on('reconnect', () => {
+    if (statusElem) {
+      statusElem.innerText = 'Ponawianie połączenia...';
+      statusElem.style.color = 'orange';
+    }
   });
 
   client.on('message', (topic, message) => {
     try {
-      // Rozpakowanie JSONa bezpośrednio w przeglądarce
       const data = JSON.parse(message.toString());
 
-      // Aktualizacja wszystkich 10 kafelków po ich kluczach s1..s10
+      // Aktualizacja wartości pól s1..s10
       for (let i = 1; i <= 10; i++) {
         const key = 's' + i;
         const elem = document.getElementById(key);
@@ -43,26 +53,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Czas odbioru
       if (timeElem) {
         timeElem.innerText = new Date().toLocaleTimeString('pl-PL');
       }
 
-      statusElem.innerText = 'Aktywne (Dane na żywo)';
-      statusElem.style.color = 'green';
+      if (statusElem) {
+        statusElem.innerText = 'Aktywne (Dane na żywo)';
+        statusElem.style.color = 'green';
+      }
+
       resetWatchdog();
     } catch (err) {
-      console.warn('Otrzymano dane niebędące formatem JSON:', message.toString());
+      console.warn('Otrzymano nieprawidłowy format JSON:', message.toString());
     }
   });
 
   client.on('error', (err) => {
-    statusElem.innerText = 'Błąd połączenia';
-    statusElem.style.color = 'red';
+    if (statusElem) {
+      statusElem.innerText = 'Błąd połączenia';
+      statusElem.style.color = 'red';
+    }
   });
 
   client.on('close', () => {
-    statusElem.innerText = 'Rozłączono';
-    statusElem.style.color = 'gray';
+    if (statusElem) {
+      statusElem.innerText = 'Rozłączono';
+      statusElem.style.color = 'gray';
+    }
   });
 });
