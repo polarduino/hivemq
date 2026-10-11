@@ -1,4 +1,4 @@
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const WATCHDOG_TIMEOUT_MS = 60000;
 let watchdogTimer = null;
 
@@ -10,6 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (versionElem) {
     versionElem.innerText = 'v' + APP_VERSION;
+  }
+
+  // Wczytanie zdefiniowanych nazw i jednostek z pliku konfiguracyjnego
+  if (MQTT_CONFIG.sensors) {
+    for (let i = 1; i <= 10; i++) {
+      const key = 's' + i;
+      const sensorCfg = MQTT_CONFIG.sensors[key];
+      if (sensorCfg) {
+        const nameElem = document.getElementById('name-' + key);
+        const unitElem = document.getElementById('unit-' + key);
+        if (nameElem && sensorCfg.name) nameElem.innerText = sensorCfg.name;
+        if (unitElem && sensorCfg.unit) unitElem.innerText = sensorCfg.unit;
+      }
+    }
   }
 
   function setStatus(text, color) {
@@ -33,12 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetWatchdog() {
     if (watchdogTimer) clearTimeout(watchdogTimer);
     watchdogTimer = setTimeout(() => {
-      setStatus('Brak danych (timeout)', '#f59e0b'); // pomarańczowy
+      setStatus('Brak danych (timeout)', '#f59e0b');
     }, WATCHDOG_TIMEOUT_MS);
   }
 
   client.on('connect', () => {
-    setStatus('Połączono (Oczekiwanie)', '#38bdf8'); // błękitny
+    setStatus('Połączono (Oczekiwanie)', '#38bdf8');
     client.subscribe(MQTT_CONFIG.topic);
   });
 
@@ -50,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const data = JSON.parse(message.toString());
 
-      // Aktualizacja wartości s1..s10 z efektem podświetlenia
       for (let i = 1; i <= 10; i++) {
         const key = 's' + i;
         const valElem = document.getElementById(key);
@@ -58,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (valElem && data[key] !== undefined) {
           valElem.innerText = data[key];
-          
+
           if (cardElem) {
             cardElem.classList.add('flash');
             setTimeout(() => cardElem.classList.remove('flash'), 300);
@@ -70,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timeElem.innerText = new Date().toLocaleTimeString('pl-PL');
       }
 
-      setStatus('Aktywne (Dane na żywo)', '#10b981'); // zielony
+      setStatus('Aktywne (Dane na żywo)', '#10b981');
       resetWatchdog();
     } catch (err) {
       console.warn('Otrzymano nieprawidłowy format JSON:', message.toString());
@@ -78,10 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   client.on('error', (err) => {
-    setStatus('Błąd połączenia', '#ef4444'); // czerwony
+    setStatus('Błąd połączenia', '#ef4444');
   });
 
   client.on('close', () => {
-    setStatus('Rozłączono', '#64748b'); // szary
+    setStatus('Rozłączono', '#64748b');
   });
 });
