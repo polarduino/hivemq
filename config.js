@@ -1,18 +1,24 @@
 // Konfiguracja parametrów połączenia MQTT, wyglądu panelu oraz archiwizacji danych
+// Wrażliwe ciągi tekstowe zostały zakodowane
 const MQTT_CONFIG = {
   // Główny tytuł wyświetlany w nagłówku strony oraz na karcie przeglądarki
   dashboardTitle: 'Panel Czujników',
   
-  // Parametry brokera EMQX Cloud (WebSocket Secure)
-  host: 'wss://ja7ada14.ala.eu-central-1.emqxsl.com:8084/mqtt',
-  username: 'frontend_guest',
-  password: '1234QR4321',
-  topic: 'test/data',
+  // Zakodowane parametry brokera EMQX Cloud
+  _h: 'd3NzOi8vamE3YWRhMTQuYWxhLmV1LWNlbnRyYWwtMS5lbXF4c2wuY29tOjgwODQvbXF0dA==', // host
+  _u: 'ZnJvbnRlbmRfZ3Vlc3Q=',                                                     // username
+  _p: 'MTIzNFFSNDMyMQ==',                                                         // password
+  _t: 'dGVzdC9kYXRh',                                                             // topic
 
-  // Adres URL aplikacji internetowej Google Apps Script (z wdrożenia jako Web App)
-  // Wklej tutaj swój link https://script.google.com/macros/s/.../exec
-  // Jeśli zostawisz pusty ciąg '', wysyłanie do arkusza będzie wyłączone.
-  googleSheetUrl: 'https://script.google.com/macros/s/AKfycbwEbgekzxwi0u2ZZ14v2XBIhsMYT84Eqks_YmofEkoptR7XK1oUX5JGNFRGz-j7J3xr/exec',
+  // Zakodowany adres Web App Google Apps Script
+  _g: 'aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J3RWJnZWt6eHdpMHUyWloxNHYyWEJJaHNNWVQ4NEVxa3NfWW1vZkVrb3B0UjdYSzFvVVg1SkdORlJHei1qN0ozeHIvZXhlYw==', 
+
+  // Gettery automatycznie dekodujące wartości w locie dla app.js
+  get host()           { return this._h ? atob(this._h) : ''; },
+  get username()       { return this._u ? atob(this._u) : ''; },
+  get password()       { return this._p ? atob(this._p) : ''; },
+  get topic()          { return this._t ? atob(this._t) : ''; },
+  get googleSheetUrl() { return this._g ? atob(this._g) : ''; },
 
   // Indywidualne etykiety oraz jednostki dla czujników s1–s10
   sensors: {
