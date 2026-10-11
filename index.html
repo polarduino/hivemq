@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Czujników MQTT</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="config.js?v=1.4"></script>
-  <script src="app.js?v=1.4" defer></script>
+  <script src="config.js?v=1.5"></script>
+  <script src="app.js?v=1.5" defer></script>
   <style>
     :root {
       --bg: #0b0f19;
@@ -104,7 +104,6 @@
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
     }
 
-    /* Efekt mignięcia po odebraniu nowej paczki */
     .card.flash {
       border-color: var(--primary);
       box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
@@ -119,12 +118,24 @@
       color: var(--text-muted);
     }
 
+    .val-wrapper {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin: 12px 0 4px 0;
+    }
+
     .val-box {
       font-size: 2rem;
       font-weight: 700;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       color: #ffffff;
-      margin: 12px 0 4px 0;
+    }
+
+    .unit {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
     }
 
     .meta-box {
@@ -161,16 +172,16 @@
     </div>
 
     <div class="grid">
-      <div class="card" id="card-s1"><h3>Czujnik 1</h3><div class="val-box" id="s1">--</div></div>
-      <div class="card" id="card-s2"><h3>Czujnik 2</h3><div class="val-box" id="s2">--</div></div>
-      <div class="card" id="card-s3"><h3>Czujnik 3</h3><div class="val-box" id="s3">--</div></div>
-      <div class="card" id="card-s4"><h3>Czujnik 4</h3><div class="val-box" id="s4">--</div></div>
-      <div class="card" id="card-s5"><h3>Czujnik 5</h3><div class="val-box" id="s5">--</div></div>
-      <div class="card" id="card-s6"><h3>Czujnik 6</h3><div class="val-box" id="s6">--</div></div>
-      <div class="card" id="card-s7"><h3>Czujnik 7</h3><div class="val-box" id="s7">--</div></div>
-      <div class="card" id="card-s8"><h3>Czujnik 8</h3><div class="val-box" id="s8">--</div></div>
-      <div class="card" id="card-s9"><h3>Czujnik 9</h3><div class="val-box" id="s9">--</div></div>
-      <div class="card" id="card-s10"><h3>Czujnik 10</h3><div class="val-box" id="s10">--</div></div>
+      <div class="card" id="card-s1"><h3 id="name-s1">Czujnik 1</h3><div class="val-wrapper"><span class="val-box" id="s1">--</span><span class="unit" id="unit-s1"></span></div></div>
+      <div class="card" id="card-s2"><h3 id="name-s2">Czujnik 2</h3><div class="val-wrapper"><span class="val-box" id="s2">--</span><span class="unit" id="unit-s2"></span></div></div>
+      <div class="card" id="card-s3"><h3 id="name-s3">Czujnik 3</h3><div class="val-wrapper"><span class="val-box" id="s3">--</span><span class="unit" id="unit-s3"></span></div></div>
+      <div class="card" id="card-s4"><h3 id="name-s4">Czujnik 4</h3><div class="val-wrapper"><span class="val-box" id="s4">--</span><span class="unit" id="unit-s4"></span></div></div>
+      <div class="card" id="card-s5"><h3 id="name-s5">Czujnik 5</h3><div class="val-wrapper"><span class="val-box" id="s5">--</span><span class="unit" id="unit-s5"></span></div></div>
+      <div class="card" id="card-s6"><h3 id="name-s6">Czujnik 6</h3><div class="val-wrapper"><span class="val-box" id="s6">--</span><span class="unit" id="unit-s6"></span></div></div>
+      <div class="card" id="card-s7"><h3 id="name-s7">Czujnik 7</h3><div class="val-wrapper"><span class="val-box" id="s7">--</span><span class="unit" id="unit-s7"></span></div></div>
+      <div class="card" id="card-s8"><h3 id="name-s8">Czujnik 8</h3><div class="val-wrapper"><span class="val-box" id="s8">--</span><span class="unit" id="unit-s8"></span></div></div>
+      <div class="card" id="card-s9"><h3 id="name-s9">Czujnik 9</h3><div class="val-wrapper"><span class="val-box" id="s9">--</span><span class="unit" id="unit-s9"></span></div></div>
+      <div class="card" id="card-s10"><h3 id="name-s10">Czujnik 10</h3><div class="val-wrapper"><span class="val-box" id="s10">--</span><span class="unit" id="unit-s10"></span></div></div>
     </div>
 
     <div class="meta-box">
