@@ -1,6 +1,6 @@
 const MQTT_CONFIG = {
   // Tytuł nagłówka i zakładki przeglądarki
-  dashboardTitle: 'Panel Odczytów',
+  dashboardTitle: 'Panel Czujników',
   
   host: 'wss://ja7ada14.ala.eu-central-1.emqxsl.com:8084/mqtt',
   username: 'frontend_guest',
