@@ -1,4 +1,4 @@
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 const WATCHDOG_TIMEOUT_MS = 60000;
 let watchdogTimer = null;
 
@@ -7,9 +7,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const dotElem = document.getElementById('status-dot');
   const timeElem = document.getElementById('last-time');
   const versionElem = document.getElementById('app-version');
+  const titleElem = document.getElementById('dashboard-title');
 
+  // Ustawienie wersji w stopce
   if (versionElem) {
     versionElem.innerText = 'v' + APP_VERSION;
+  }
+
+  // Ustawienie tytułu panelu i zakładki z config.js
+  if (MQTT_CONFIG.dashboardTitle) {
+    if (titleElem) titleElem.innerText = MQTT_CONFIG.dashboardTitle;
+    document.title = MQTT_CONFIG.dashboardTitle;
   }
 
   // Wczytanie zdefiniowanych nazw i jednostek z pliku konfiguracyjnego
