@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Czujników MQTT</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-  <script src="config.js?v=1.5"></script>
-  <script src="app.js?v=1.5" defer></script>
+  <script src="config.js?v=1.6"></script>
+  <script src="app.js?v=1.6" defer></script>
   <style>
     :root {
       --bg: #0b0f19;
@@ -164,7 +164,8 @@
 
   <div class="container">
     <div class="header-bar">
-      <h2>Panel Odczytów</h2>
+      <!-- Tytuł podmieniany dynamicznie z config.js -->
+      <h2 id="dashboard-title">Panel Odczytów</h2>
       <div class="status-badge">
         <span id="status-dot" class="dot"></span>
         <span id="status">Łączenie...</span>
