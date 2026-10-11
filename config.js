@@ -28,9 +28,9 @@ const MQTT_CONFIG = {
     s4:  { name: 'Ciśnienie',            unit: 'hPa' },
     s5:  { name: 'Napięcie Zasilania',   unit: 'V' },
     s6:  { name: 'Prąd Pobierany',       unit: 'A' },
-    s7:  { name: 'Czujnik 7',            unit: '' },
-    s8:  { name: 'Czujnik 8',            unit: '' },
-    s9:  { name: 'Czujnik 9',            unit: '' },
-    s10: { name: 'Czujnik 10',           unit: '' }
+    s7:  { name: 'Czujnik 7',            unit: 'ppm' },
+    s8:  { name: 'Czujnik 8',            unit: 'V/V' },
+    s9:  { name: 'Czujnik 9',            unit: '%DGW' },
+    s10: { name: 'Czujnik 10',           unit: 'W' }
   }
 };
