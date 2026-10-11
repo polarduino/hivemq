@@ -4,10 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Czujników MQTT</title>
+
+  <!-- Biblioteka MQTT.js do obsługi połączenia przez WebSockets -->
   <script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
-  <script src="config.js?v=1.7"></script>
-  <script src="app.js?v=1.7" defer></script>
+
+  <!-- Pliki konfiguracyjne i skrypt aplikacji z parametrem unikania cache (?v=1.8) -->
+  <script src="config.js?v=1.8"></script>
+  <script src="app.js?v=1.8" defer></script>
+
   <style>
+    /* Zmienne motywu graficznego (ciemny interfejs) */
     :root {
       --bg: #0b0f19;
       --card-bg: #111827;
@@ -37,6 +43,7 @@
       width: 100%;
     }
 
+    /* Pasek nagłówka z tytułem i statusem połączenia */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -58,6 +65,7 @@
       -webkit-text-fill-color: transparent;
     }
 
+    /* Pigułka ze statusem połączenia */
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -71,6 +79,7 @@
       color: var(--text-main);
     }
 
+    /* Dioda LED sygnalizująca stan brokera/danych */
     .dot {
       width: 8px;
       height: 8px;
@@ -79,12 +88,14 @@
       box-shadow: 0 0 6px currentColor;
     }
 
+    /* Siatka kafelków */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
       gap: 16px;
     }
 
+    /* Pojedyncza karta odczytu */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -104,6 +115,7 @@
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
     }
 
+    /* Efekt mignięcia po przybyciu nowej wartości */
     .card.flash {
       border-color: var(--primary);
       box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
@@ -130,6 +142,7 @@
       font-weight: 700;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       color: #ffffff;
+      transition: opacity 0.3s ease;
     }
 
     .unit {
@@ -138,6 +151,7 @@
       color: var(--text-muted);
     }
 
+    /* Belka dolna z czasem i wersją */
     .meta-box {
       display: flex;
       justify-content: space-between;
@@ -163,8 +177,8 @@
 <body>
 
   <div class="container">
+    <!-- Pasek tytułowy (tytuł podmieniany przez app.js z config.js) -->
     <div class="header-bar">
-      <!-- Tytuł podmieniany dynamicznie z config.js -->
       <h2 id="dashboard-title">Panel Odczytów</h2>
       <div class="status-badge">
         <span id="status-dot" class="dot"></span>
@@ -172,6 +186,7 @@
       </div>
     </div>
 
+    <!-- 10 kafelków czujników -->
     <div class="grid">
       <div class="card" id="card-s1"><h3 id="name-s1">Czujnik 1</h3><div class="val-wrapper"><span class="val-box" id="s1">--</span><span class="unit" id="unit-s1"></span></div></div>
       <div class="card" id="card-s2"><h3 id="name-s2">Czujnik 2</h3><div class="val-wrapper"><span class="val-box" id="s2">--</span><span class="unit" id="unit-s2"></span></div></div>
@@ -185,6 +200,7 @@
       <div class="card" id="card-s10"><h3 id="name-s10">Czujnik 10</h3><div class="val-wrapper"><span class="val-box" id="s10">--</span><span class="unit" id="unit-s10"></span></div></div>
     </div>
 
+    <!-- Pasek informacyjny: znacznik czasu ostatniej paczki i wersja -->
     <div class="meta-box">
       <div class="time-info">Ostatnia odebrana paczka: <span id="last-time">brak</span></div>
       <footer>Wersja: <span id="app-version">--</span></footer>
