@@ -1,33 +1,59 @@
 // Numer aktualnej wersji aplikacji – pokazywany w stopce strony
-const APP_VERSION = '1.8';
+const APP_VERSION = '1.9';
 
 // Limit czasu (w ms), po którym stan czujników zostanie uznany za nieaktualny
 const WATCHDOG_TIMEOUT_MS = 60000;
 let watchdogTimer = null;
 
+// Pamięć poprzednich stanów alarmowych dla czujników (zapobiega ciągłemu powtarzaniu mowy)
+// Możliwe stany: 'normal', 'warning', 'alarm'
+const sensorAlertStates = {};
+
+// Domyślnie powiadomienia głosowe wyłączone (odblokowywane przyciskiem w nagłówku)
+let isVoiceEnabled = false;
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Pobranie kluczowych elementów interfejsu
   const statusElem = document.getElementById('status');
   const dotElem = document.getElementById('status-dot');
   const timeElem = document.getElementById('last-time');
   const versionElem = document.getElementById('app-version');
   const titleElem = document.getElementById('dashboard-title');
+  const voiceBtn = document.getElementById('voice-toggle-btn');
+  const voiceIcon = document.getElementById('voice-icon');
+  const voiceText = document.getElementById('voice-text');
 
-  // 1. Wyświetlenie wersji w stopce
+  // 1. Obsługa przycisku włączania/wyłączania mowy
+  if (voiceBtn) {
+    voiceBtn.addEventListener('click', () => {
+      isVoiceEnabled = !isVoiceEnabled;
+      if (isVoiceEnabled) {
+        voiceIcon.innerText = '🔊';
+        voiceText.innerText = 'Dźwięk: Włączony';
+        speakAlert('Komunikaty głosowe zostały aktywowane.');
+      } else {
+        voiceIcon.innerText = '🔇';
+        voiceText.innerText = 'Dźwięk: Wyłączony';
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+    });
+  }
+
+  // 2. Wyświetlenie wersji w stopce
   if (versionElem) {
     versionElem.innerText = 'v' + APP_VERSION;
   }
 
-  // 2. Dynamiczne ustawienie tytułu strony i karty z pliku config.js
+  // 3. Dynamiczne ustawienie tytułu strony i karty z pliku config.js
   if (MQTT_CONFIG.dashboardTitle) {
     if (titleElem) titleElem.innerText = MQTT_CONFIG.dashboardTitle;
     document.title = MQTT_CONFIG.dashboardTitle;
   }
 
-  // 3. Wczytanie zdefiniowanych nazw i jednostek czujników (s1..s10)
+  // 4. Wczytanie zdefiniowanych nazw i jednostek czujników (s1..s10)
   if (MQTT_CONFIG.sensors) {
     for (let i = 1; i <= 10; i++) {
       const key = 's' + i;
+      sensorAlertStates[key] = 'normal';
       const sensorCfg = MQTT_CONFIG.sensors[key];
       if (sensorCfg) {
         const nameElem = document.getElementById('name-' + key);
@@ -38,7 +64,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Funkcja pomocnicza: zmiana tekstu i koloru diody statusu
+  // Funkcja odtwarzająca komunikat głosowy po polsku
+  function speakAlert(text) {
+    if (!isVoiceEnabled || !('speechSynthesis' in window)) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pl-PL';
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Ocena wartości czujnika pod kątem progów (warning / alarm)
+  function evaluateSensorThresholds(key, rawValue) {
+    const cardElem = document.getElementById('card-' + key);
+    const cfg = MQTT_CONFIG.sensors ? MQTT_CONFIG.sensors[key] : null;
+    if (!cardElem || !cfg) return;
+
+    const numVal = parseFloat(rawValue);
+    if (isNaN(numVal)) return;
+
+    let currentState = 'normal';
+
+    // Sprawdzenie progu czerwonego (alarm)
+    const isAlarmMax = cfg.alarmMax != null && numVal >= cfg.alarmMax;
+    const isAlarmMin = cfg.alarmMin != null && numVal <= cfg.alarmMin;
+
+    // Sprawdzenie progu żółtego (warning)
+    const isWarnMax = cfg.warnMax != null && numVal >= cfg.warnMax;
+    const isWarnMin = cfg.warnMin != null && numVal <= cfg.warnMin;
+
+    if (isAlarmMax || isAlarmMin) {
+      currentState = 'alarm';
+    } else if (isWarnMax || isWarnMin) {
+      currentState = 'warning';
+    }
+
+    // Aplikacja odpowiednich klas stylów CSS
+    cardElem.classList.remove('status-warning', 'status-alarm');
+    if (currentState === 'alarm') {
+      cardElem.classList.add('status-alarm');
+    } else if (currentState === 'warning') {
+      cardElem.classList.add('status-warning');
+    }
+
+    // Wyzwolenie komunikatu głosowego tylko przy przejściu w stan czerwony (alarm)
+    const prevState = sensorAlertStates[key];
+    if (currentState === 'alarm' && prevState !== 'alarm') {
+      const sensorName = cfg.name || key;
+      const unit = cfg.unit ? (' ' + cfg.unit) : '';
+      speakAlert(`Uwaga! Alarm na czujniku ${sensorName}. Wartość wynosi ${numVal}${unit}`);
+    }
+
+    sensorAlertStates[key] = currentState;
+  }
+
+  // Zmiana tekstu i diody statusu połączenia
   function setStatus(text, color) {
     if (statusElem) statusElem.innerText = text;
     if (dotElem) {
@@ -47,33 +126,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Przyciemnienie wartości na kafelkach, gdy minie czas oczekiwania (watchdog)
+  // Wygaszenie wartości kafelków po upływie czasu
   function markStale() {
     document.querySelectorAll('.val-box').forEach(el => { el.style.opacity = '0.4'; });
   }
 
-  // Przywrócenie pełnej jasności po odebraniu świeżej paczki danych
+  // Przywrócenie jasności kafelków po świeżych danych
   function markFresh() {
     document.querySelectorAll('.val-box').forEach(el => { el.style.opacity = '1'; });
   }
 
-  // Funkcja wysyłająca kopię odebranych danych do Google Sheets (Apps Script)
+  // Archiwizacja do arkusza Google Sheets w tle
   function archiveToGoogleSheets(data) {
-    if (!MQTT_CONFIG.googleSheetUrl) return; // Brak URL oznacza wyłączoną archiwizację
+    if (!MQTT_CONFIG.googleSheetUrl) return;
 
     fetch(MQTT_CONFIG.googleSheetUrl, {
       method: 'POST',
-      mode: 'no-cors', // Niezbędne do ominięcia ograniczeń CORS w Apps Script
-      headers: {
-        'Content-Type': 'text/plain' // Zabezpiecza przed dodatkowym zapytaniem preflight OPTIONS
-      },
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(data)
     }).catch(err => {
       console.warn('Błąd podczas wysyłania do Google Sheets:', err);
     });
   }
 
-  // Opcje połączenia klienta MQTT.js
+  // Opcje połączenia MQTT.js
   const options = {
     clientId: 'web_' + Math.random().toString(16).substring(2, 8),
     username: MQTT_CONFIG.username,
@@ -82,10 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
     connectTimeout: 5000
   };
 
-  // Nawiązanie połączenia z brokerem EMQX Cloud
   const client = mqtt.connect(MQTT_CONFIG.host, options);
 
-  // Restart licznika watchdoga – ostrzega w przypadku przerw w nadawaniu
   function resetWatchdog() {
     if (watchdogTimer) clearTimeout(watchdogTimer);
     watchdogTimer = setTimeout(() => {
@@ -94,25 +169,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }, WATCHDOG_TIMEOUT_MS);
   }
 
-  // Zatrzymanie watchdoga (np. przy rozłączeniu z brokerem)
   function stopWatchdog() {
     if (watchdogTimer) clearTimeout(watchdogTimer);
     watchdogTimer = null;
   }
 
-  // Zdarzenie: Połączono z brokerem
   client.on('connect', () => {
     setStatus('Połączono (Oczekiwanie)', '#38bdf8');
     client.subscribe(MQTT_CONFIG.topic);
-    resetWatchdog(); // Watchdog czuwa również wtedy, gdy po połączeniu dane nigdy nie nadejdą
+    resetWatchdog();
   });
 
-  // Zdarzenie: Próba ponownego nawiązania zerwanego połączenia
   client.on('reconnect', () => {
     setStatus('Ponawianie połączenia...', '#f59e0b');
   });
 
-  // Zdarzenie: Odebrano wiadomość na subskrybowanym kanale
   client.on('message', (topic, message) => {
     let data;
     try {
@@ -126,29 +197,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let updated = false;
 
-    // Przeglądamy klucze s1..s10. Aktualizujemy tylko te obecne w paczce
+    // Aktualizacja kafelków i sprawdzanie progów
     for (let i = 1; i <= 10; i++) {
       const key = 's' + i;
       const valElem = document.getElementById(key);
       const cardElem = document.getElementById('card-' + key);
 
-      // Warunek != null dopuszcza zarówno liczby, jak i ciągi znaków (ignorując null i undefined)
       if (valElem && data[key] != null) {
         valElem.innerText = data[key];
         updated = true;
 
-        // Krótki błysk kafelka sygnalizujący aktualizację pomiaru
+        // Błysk kafelka przy aktualizacji
         if (cardElem) {
           cardElem.classList.add('flash');
           setTimeout(() => cardElem.classList.remove('flash'), 300);
         }
+
+        // Ocena progów żółtego i czerwonego
+        evaluateSensorThresholds(key, data[key]);
       }
     }
 
-    // Jeśli w wiadomości nie było żadnego z kluczy s1..s10, nie traktujemy jej jako pomiaru
     if (!updated) return;
 
-    // Odnotowanie czasu odbioru paczki
     if (timeElem) {
       timeElem.innerText = new Date().toLocaleTimeString('pl-PL');
     }
@@ -157,11 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setStatus('Aktywne (Dane na żywo)', '#10b981');
     resetWatchdog();
 
-    // Wysłanie kopii danych do arkusza Google Sheets w tle
     archiveToGoogleSheets(data);
   });
 
-  // Zdarzenie: Błąd sieci lub protokołu MQTT
   client.on('error', (err) => {
     console.warn('Błąd MQTT:', err && err.message ? err.message : err);
     stopWatchdog();
@@ -169,7 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setStatus('Błąd połączenia', '#ef4444');
   });
 
-  // Zdarzenie: Rozłączenie z serwerem
   client.on('close', () => {
     stopWatchdog();
     markStale();
