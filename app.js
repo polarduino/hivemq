@@ -73,10 +73,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.speechSynthesis.speak(utterance);
   }
 
-  // Ocena wartości czujnika pod kątem progów (warning / alarm)
+// Ocena wartości czujnika pod kątem progów (warning = Próg I, alarm = Próg II)
   function evaluateSensorThresholds(key, rawValue) {
     const cardElem = document.getElementById('card-' + key);
-    const cfg = MQTT_CONFIG.sensors ? MQTT_CONFIG.sensors[key] : null;
+    const cfg = MQTT_CONFIG.sensors ? MQTT_CONFIG.sensors[key] : null; //[cite: 4]
     if (!cardElem || !cfg) return;
 
     const numVal = parseFloat(rawValue);
@@ -84,11 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentState = 'normal';
 
-    // Sprawdzenie progu czerwonego (alarm)
+    // 1. Sprawdzenie progu II (czerwony / alarm)
     const isAlarmMax = cfg.alarmMax != null && numVal >= cfg.alarmMax;
     const isAlarmMin = cfg.alarmMin != null && numVal <= cfg.alarmMin;
 
-    // Sprawdzenie progu żółtego (warning)
+    // 2. Sprawdzenie progu I (żółty / ostrzeżenie)
     const isWarnMax = cfg.warnMax != null && numVal >= cfg.warnMax;
     const isWarnMin = cfg.warnMin != null && numVal <= cfg.warnMin;
 
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentState = 'warning';
     }
 
-    // Aplikacja odpowiednich klas stylów CSS
+    // Aplikacja stylów CSS
     cardElem.classList.remove('status-warning', 'status-alarm');
     if (currentState === 'alarm') {
       cardElem.classList.add('status-alarm');
@@ -106,12 +106,15 @@ document.addEventListener('DOMContentLoaded', () => {
       cardElem.classList.add('status-warning');
     }
 
-    // Wyzwolenie komunikatu głosowego tylko przy przejściu w stan czerwony (alarm)
+    // Komunikaty głosowe przy wejściu w dany próg
     const prevState = sensorAlertStates[key];
-    if (currentState === 'alarm' && prevState !== 'alarm') {
-      const sensorName = cfg.name || key;
-      const unit = cfg.unit ? (' ' + cfg.unit) : '';
-      speakAlert(`Uwaga! Alarm na czujniku ${sensorName}. Wartość wynosi ${numVal}${unit}`);
+    const sensorName = cfg.name || key; //[cite: 4]
+    const unit = cfg.unit ? (' ' + cfg.unit) : '';
+
+    if (currentState === 'warning' && prevState !== 'warning' && prevState !== 'alarm') {
+      speakAlert(`Uwaga! Przekroczenie progu pierwszego: ${sensorName}, wartość: ${numVal}${unit}`);
+    } else if (currentState === 'alarm' && prevState !== 'alarm') {
+      speakAlert(`Alarm! Przekroczenie progu drugiego: ${sensorName}, wartość: ${numVal}${unit}`);
     }
 
     sensorAlertStates[key] = currentState;
