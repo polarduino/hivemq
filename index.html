@@ -8,9 +8,9 @@
   <!-- Biblioteka MQTT.js do obsługi połączenia przez WebSockets -->
   <script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
 
-  <!-- Pliki konfiguracyjne i skrypt aplikacji z parametrem unikania cache (?v=1.8) -->
-  <script src="config.js?v=1.8"></script>
-  <script src="app.js?v=1.8" defer></script>
+  <!-- Pliki konfiguracyjne i skrypt aplikacji z parametrem unikania cache (?v=1.9) -->
+  <script src="config.js?v=1.9"></script>
+  <script src="app.js?v=1.9" defer></script>
 
   <style>
     /* Zmienne motywu graficznego (ciemny interfejs) */
@@ -22,6 +22,8 @@
       --text-muted: #9ca3af;
       --primary: #38bdf8;
       --accent: #2563eb;
+      --warning: #f59e0b;
+      --danger: #ef4444;
     }
 
     * { box-sizing: border-box; }
@@ -65,6 +67,32 @@
       -webkit-text-fill-color: transparent;
     }
 
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Przycisk aktywacji / wyciszania głosu */
+    .audio-btn {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    .audio-btn:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
     /* Pigułka ze statusem połączenia */
     .status-badge {
       display: inline-flex;
@@ -106,19 +134,44 @@
       justify-content: space-between;
       min-height: 110px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     }
 
     .card:hover {
       transform: translateY(-2px);
-      border-color: #374151;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
     }
 
     /* Efekt mignięcia po przybyciu nowej wartości */
     .card.flash {
-      border-color: var(--primary);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35) !important;
+    }
+
+    /* STYL OSTRZEŻENIA (żółty) */
+    .card.status-warning {
+      border-color: var(--warning);
+      background: rgba(245, 158, 11, 0.08);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+    }
+    .card.status-warning .val-box {
+      color: #fbbf24;
+    }
+
+    /* STYL ALARMU (czerwony) */
+    .card.status-alarm {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.12);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
+      animation: pulse-danger 2s infinite ease-in-out;
+    }
+    .card.status-alarm .val-box {
+      color: #f87171;
+    }
+
+    @keyframes pulse-danger {
+      0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.25); }
+      50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.55); }
     }
 
     .card h3 {
@@ -142,7 +195,7 @@
       font-weight: 700;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       color: #ffffff;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, color 0.2s ease;
     }
 
     .unit {
@@ -180,9 +233,14 @@
     <!-- Pasek tytułowy (tytuł podmieniany przez app.js z config.js) -->
     <div class="header-bar">
       <h2 id="dashboard-title">Panel Odczytów</h2>
-      <div class="status-badge">
-        <span id="status-dot" class="dot"></span>
-        <span id="status">Łączenie...</span>
+      <div class="header-controls">
+        <button id="voice-toggle-btn" class="audio-btn" title="Kliknij, aby włączyć lub wyciszyć komunikaty głosowe">
+          <span id="voice-icon">🔇</span> <span id="voice-text">Dźwięk: Wyłączony</span>
+        </button>
+        <div class="status-badge">
+          <span id="status-dot" class="dot"></span>
+          <span id="status">Łączenie...</span>
+        </div>
       </div>
     </div>
 
