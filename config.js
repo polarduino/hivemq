@@ -23,9 +23,9 @@ const MQTT_CONFIG = {
   // Indywidualne etykiety, jednostki oraz progi progowe (warning = żółty, alarm = czerwony)
   // Możesz podać max (przekroczenie w górę) lub min (spadek w dół)
   sensors: {
-    s1:  { name: 'Temperatura Salon',   unit: '°C',   warnMax: 26.0,  alarmMax: 30.0 },
-    s2:  { name: 'Wilgotność Salon',     unit: '%',    warnMax: 65.0,  alarmMax: 75.0 },
-    s3:  { name: 'Temperatura Zewnątrz', unit: '°C',   warnMax: 32.0,  alarmMax: 38.0 },
+    s1:  { name: 'Salon O2',             unit: '%V/V O2',   warnMax: 19.0,  alarmMax: 18.0 },
+    s2:  { name: 'Salon CO2',            unit: '%V/V CO2',    warnMax: 0.5,  alarmMax: 1.5 },
+    s3:  { name: 'Salon Temp.',          unit: '°C',   warnMin: 19.0,  alarmMin: 17.0 },
     s4:  { name: 'Ciśnienie',            unit: 'hPa',  warnMin: 990.0, alarmMin: 970.0 },
     s5:  { name: 'Napięcie Zasilania',   unit: 'V',    warnMin: 11.5,  alarmMin: 10.8 },
     s6:  { name: 'Prąd Pobierany',       unit: 'A',    warnMax: 8.0,   alarmMax: 10.0 },
