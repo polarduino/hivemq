@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isVoiceEnabled) {
         voiceIcon.innerText = '🔊';
         voiceText.innerText = 'Dźwięk: Włączony';
-        speakAlert('Komunikaty głosowe zostały aktywowane.');
+        speakAlert('Komunikaty głosowe włączone.');
       } else {
         voiceIcon.innerText = '🔇';
         voiceText.innerText = 'Dźwięk: Wyłączony';
