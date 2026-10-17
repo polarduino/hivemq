@@ -6,14 +6,14 @@
   <title>Panel Czujników MQTT</title>
 
   <!-- Ikony Favicon -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.0">
-  <link rel="alternate icon" href="favicon.ico?v=2.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2.1">
+  <link rel="alternate icon" href="favicon.ico?v=2.1">
 
   <!-- Biblioteka MQTT.js do obsługi połączenia przez WebSockets -->
   <script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
 
   <!-- Skrypt aplikacji -->
-  <script src="app.js?v=2.0" defer></script>
+  <script src="app.js?v=2.1" defer></script>
 
   <style>
     :root {
@@ -275,9 +275,14 @@
       margin-bottom: 16px;
     }
 
+    /* Wyłączenie pointer-events dla wnętrza dropzone, aby nie gubiło zdarzenia dragleave/drop */
+    .dropzone * {
+      pointer-events: none;
+    }
+
     .dropzone:hover, .dropzone.dragover {
       border-color: var(--primary);
-      background: rgba(56, 189, 248, 0.05);
+      background: rgba(56, 189, 248, 0.08);
     }
 
     .dropzone-text {
@@ -362,17 +367,17 @@
   <div id="license-modal" class="modal-overlay">
     <div class="modal-card">
       <h3>Odblokuj Panel</h3>
-      <p>Wskaż plik licencji obiektu (<code>.lic</code>) oraz wpisz hasło deszyfrujące.</p>
+      <p>Wskaż plik licencji obiektu (<code>.lic</code>) oraz wpisz hasło.</p>
 
       <input type="file" id="file-input" accept=".lic" style="display: none;">
       
       <div id="dropzone" class="dropzone" onclick="document.getElementById('file-input').click()">
         <div id="dropzone-label" class="dropzone-text">📂 Kliknij lub przeciągnij plik .lic</div>
-        <div class="dropzone-sub">Plik konfiguracyjny z kluczem AES-256</div>
+        <div class="dropzone-sub">Plik konfiguracyjny obiektu</div>
       </div>
 
       <div class="field-group">
-        <label for="password-input">Hasło deszyfrujące:</label>
+        <label for="password-input">Hasło:</label>
         <input type="password" id="password-input" placeholder="Wpisz hasło klienta...">
       </div>
 
