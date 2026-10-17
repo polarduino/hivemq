@@ -1,5 +1,5 @@
 // Numer wersji aplikacji
-const APP_VERSION = '2.0-lic';
+const APP_VERSION = '2.1';
 
 // Pamięć podręczna w przeglądarce
 const STORAGE_KEY = 'mqtt_dashboard_license_data';
@@ -12,7 +12,7 @@ let watchdogTimer = null;
 const sensorAlertStates = {};
 let isVoiceEnabled = false;
 
-// Aktywna, odszyfrowana konfiguracja oraz klient MQTT
+// Aktywna konfiguracja oraz klient MQTT
 let ACTIVE_CONFIG = null;
 let mqttClient = null;
 
@@ -62,23 +62,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Obsługa przeciągania pliku .lic (Drag & Drop)
+  // 3. Obsługa przeciągania pliku .lic (Drag & Drop) z pełną ochroną przed przechwytywaniem przez okno
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    window.addEventListener(eventName, (e) => e.preventDefault(), false);
+    document.body.addEventListener(eventName, (e) => e.preventDefault(), false);
+  });
+
   if (dropzone) {
     ['dragenter', 'dragover'].forEach(eventName => {
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
+        e.stopPropagation();
         dropzone.classList.add('dragover');
       });
     });
+
     ['dragleave', 'drop'].forEach(eventName => {
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
+        e.stopPropagation();
         dropzone.classList.remove('dragover');
       });
     });
+
     dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
       const files = e.dataTransfer.files;
-      if (files.length > 0) handleFileSelection(files[0]);
+      if (files && files.length > 0) handleFileSelection(files[0]);
+    });
+  }
+
+  // Umożliwienie upuszczenia pliku na obszar całego okna dialogowego
+  if (modal) {
+    modal.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (dropzone) dropzone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) handleFileSelection(files[0]);
     });
   }
 
@@ -89,15 +112,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleFileSelection(file) {
-    if (!file.name.endsWith('.lic')) {
+    if (!file.name.toLowerCase().endsWith('.lic')) {
       showError('Wybierz poprawny plik licencji z rozszerzeniem .lic');
       return;
     }
     const reader = new FileReader();
     reader.onload = (e) => {
       selectedLicenseText = e.target.result;
-      dropzoneLabel.innerText = '✔ ' + file.name;
-      errorMsg.innerText = '';
+      if (dropzoneLabel) dropzoneLabel.innerText = '✔ ' + file.name;
+      showError('');
     };
     reader.readAsText(file);
   }
@@ -111,13 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const pass = passInput.value;
       if (!pass) {
-        showError('Wpisz hasło deszyfrujące.');
+        showError('Wpisz hasło.');
         return;
       }
 
       unlockBtn.disabled = true;
-      unlockBtn.innerText = 'Deszyfrowanie...';
-      errorMsg.innerText = '';
+      unlockBtn.innerText = 'Przetwarzanie...';
+      showError('');
 
       try {
         const config = await decryptLicenseData(selectedLicenseText, pass);
@@ -140,12 +163,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Obsługa klawisza Enter w polu hasła
-  passInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') unlockBtn.click();
-  });
+  if (passInput) {
+    passInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') unlockBtn.click();
+    });
+  }
 
   function showError(msg) {
-    errorMsg.innerText = msg;
+    if (errorMsg) errorMsg.innerText = msg;
   }
 
   // 5. Autologowanie, jeśli licencja jest już zapamiętana
@@ -161,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Deszyfracja strumienia AES-256-GCM z użyciem Web Crypto API
+// Weryfikacja i odczyt danych licencji
 async function decryptLicenseData(base64Payload, password) {
   const cleanStr = base64Payload.trim();
   const binary = atob(cleanStr);
@@ -211,7 +236,7 @@ async function decryptLicenseData(base64Payload, password) {
   return JSON.parse(dec.decode(decryptedBuffer));
 }
 
-// Inicjalizacja widoku i połączenia MQTT po udanej deszyfracji
+// Inicjalizacja widoku i połączenia MQTT
 function initDashboard(config) {
   ACTIVE_CONFIG = config;
 
@@ -222,7 +247,7 @@ function initDashboard(config) {
     document.title = config.dashboardTitle;
   }
 
-  // Dynamiczne zbudowanie siatki kafelków (1 do 32)
+  // Dynamiczne zbudowanie siatki kafelków (1 do 32) w kolejności numerycznej
   buildSensorsGrid(config.sensors);
 
   // Uruchomienie połączenia MQTT
@@ -235,7 +260,13 @@ function buildSensorsGrid(sensorsObj) {
   if (!grid || !sensorsObj) return;
   grid.innerHTML = '';
 
-  Object.keys(sensorsObj).forEach(key => {
+  const sortedKeys = Object.keys(sensorsObj).sort((a, b) => {
+    const numA = parseInt(a.replace(/\D/g, ''), 10) || 0;
+    const numB = parseInt(b.replace(/\D/g, ''), 10) || 0;
+    return numA - numB;
+  });
+
+  sortedKeys.forEach(key => {
     sensorAlertStates[key] = 'normal';
     const cfg = sensorsObj[key];
 
@@ -281,12 +312,12 @@ function evaluateSensorThresholds(key, rawValue) {
   let currentState = 'normal';
 
   // 1. Sprawdzenie progu II (czerwony / alarm)
-  const isAlarmMax = cfg.alarmMax != null && numVal >= cfg.alarmMax;
-  const isAlarmMin = cfg.alarmMin != null && numVal <= cfg.alarmMin;
+  const isAlarmMax = (cfg.alarmMax !== undefined && cfg.alarmMax !== null && cfg.alarmMax !== '') && numVal >= parseFloat(cfg.alarmMax);
+  const isAlarmMin = (cfg.alarmMin !== undefined && cfg.alarmMin !== null && cfg.alarmMin !== '') && numVal <= parseFloat(cfg.alarmMin);
 
   // 2. Sprawdzenie progu I (żółty / ostrzeżenie)
-  const isWarnMax = cfg.warnMax != null && numVal >= cfg.warnMax;
-  const isWarnMin = cfg.warnMin != null && numVal <= cfg.warnMin;
+  const isWarnMax = (cfg.warnMax !== undefined && cfg.warnMax !== null && cfg.warnMax !== '') && numVal >= parseFloat(cfg.warnMax);
+  const isWarnMin = (cfg.warnMin !== undefined && cfg.warnMin !== null && cfg.warnMin !== '') && numVal <= parseFloat(cfg.warnMin);
 
   if (isAlarmMax || isAlarmMin) {
     currentState = 'alarm';
